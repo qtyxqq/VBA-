@@ -1,0 +1,74 @@
+
+Public isRunning As Boolean
+Public nextRunTime As Date
+
+#If VBA7 Then
+    Private Declare PtrSafe Function SetCursorPos Lib "user32" (ByVal x As Long, ByVal y As Long) As Long
+    Private Declare PtrSafe Function GetCursorPos Lib "user32" (lpPoint As POINTAPI) As Long
+    Private Declare PtrSafe Function SetThreadExecutionState Lib "kernel32" (ByVal esFlags As Long) As Long
+#Else
+    Private Declare Function SetCursorPos Lib "user32" (ByVal x As Long, ByVal y As Long) As Long
+    Private Declare Function GetCursorPos Lib "user32" (lpPoint As POINTAPI) As Long
+    Private Declare Function SetThreadExecutionState Lib "kernel32" (ByVal esFlags As Long) As Long
+#End If
+
+Private Declare PtrSafe Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
+
+Const ES_CONTINUOUS As Long = &H80000000
+Const ES_DISPLAY_REQUIRED As Long = &H2
+Const ES_SYSTEM_REQUIRED As Long = &H1
+
+Private Type POINTAPI
+    x As Long
+    y As Long
+End Type
+
+Dim strTime As Integer
+
+Sub MoveMouse()
+    If Not isRunning Then Exit Sub
+
+    Dim pos As POINTAPI
+    If strTime = 1 Then
+        GetCursorPos pos
+        SetCursorPos pos.x + 10, pos.y
+        SetCursorPos pos.x - 10, pos.y
+        SetCursorPos pos.x + 20, pos.y
+        SetCursorPos pos.x - 20, pos.y
+        SetCursorPos pos.x + 30, pos.y
+        SetCursorPos pos.x - 30, pos.y
+        SetCursorPos pos.x + 50, pos.y
+        SetCursorPos pos.x - 50, pos.y
+    End If
+
+    nextRunTime = Now + TimeSerial(0, 0, 2)
+    Application.OnTime nextRunTime, "MoveMouse"
+
+    SetThreadExecutionState ES_CONTINUOUS Or ES_DISPLAY_REQUIRED Or ES_SYSTEM_REQUIRED
+End Sub
+
+Sub StartAutoMove()
+    If Not isRunning Then
+        isRunning = True
+        MoveMouse
+        MsgBox "running", vbInformation
+    Else
+        MsgBox "already running", vbExclamation
+    End If
+End Sub
+
+Sub StopAutoMove()
+    On Error Resume Next
+    Application.OnTime nextRunTime, "MoveMouse", False
+    isRunning = False
+    MsgBox "stopped", vbInformation
+    SetThreadExecutionState ES_CONTINUOUS
+End Sub
+
+Sub ãã¿ã³1_Click()
+    If Not isRunning Then
+        StartAutoMove
+    Else
+        StopAutoMove
+    End If
+End Sub
