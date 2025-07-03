@@ -1,0 +1,47 @@
+Sub CleanMetadataAndSave()
+    Dim filePath As String
+    Dim newFilePath As String
+    Dim wb As Workbook
+
+    ' ←←← 设置目标文件路径（.xlsx 文件）
+    filePath = "C:\Your\Path\YourFile.xlsx"
+
+    ' 打开工作簿（不更新链接）
+    Set wb = Workbooks.Open(Filename:=filePath, UpdateLinks:=False)
+
+    ' 关闭提示
+    Application.DisplayAlerts = False
+    On Error Resume Next
+
+    ' 清除内置文档属性
+    With wb
+        .BuiltinDocumentProperties("Author") = ""
+        .BuiltinDocumentProperties("Last Author") = ""
+        .BuiltinDocumentProperties("Company") = ""
+        .BuiltinDocumentProperties("Manager") = ""
+        .BuiltinDocumentProperties("Title") = ""
+        .BuiltinDocumentProperties("Subject") = ""
+        .BuiltinDocumentProperties("Comments") = ""
+        .BuiltinDocumentProperties("Keywords") = ""
+    End With
+
+    On Error GoTo 0
+
+    ' 设置保存路径（覆盖原文件，或加 "_clean" 后缀）
+    ' 方法1：覆盖原文件
+    newFilePath = filePath
+
+    ' 方法2：保存为副本
+    ' newFilePath = Left(filePath, InStrRev(filePath, ".")) & "clean.xlsx"
+
+    ' 另存为新文件（无宏版本）
+    wb.SaveAs Filename:=newFilePath, FileFormat:=xlOpenXMLWorkbook ' = .xlsx
+
+    ' 关闭文件
+    wb.Close SaveChanges:=False
+
+    ' 恢复提示
+    Application.DisplayAlerts = True
+
+    MsgBox "已清除属性并保存为干净文件：" & vbCrLf & newFilePath, vbInformation
+End Sub
