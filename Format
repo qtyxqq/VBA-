@@ -1,0 +1,45 @@
+Sub BatchResetExcelView()
+    Dim folderPath As String
+    Dim fileName As String
+    Dim wb As Workbook
+    Dim ws As Worksheet
+
+    ' 设置目标文件夹路径（可修改）
+    folderPath = "C:\Your\Target\Folder\"  ' ←←← 修改为你的文件夹路径
+
+    If Right(folderPath, 1) <> "\" Then folderPath = folderPath & "\"
+
+    ' 遍历文件夹中的所有 .xlsx 文件
+    fileName = Dir(folderPath & "*.xlsx")
+    Do While fileName <> ""
+
+        ' 打开工作簿（关闭更新以提高速度）
+        Application.ScreenUpdating = False
+        Set wb = Workbooks.Open(folderPath & fileName)
+
+        ' 对每个工作表进行设置
+        For Each ws In wb.Worksheets
+            ' 设置选中A1
+            ws.Activate
+            ws.Range("A1").Select
+
+            ' 设置缩放为100%、滚动到左上角
+            With ws.Parent.Windows(1)
+                .ScrollRow = 1
+                .ScrollColumn = 1
+                .Zoom = 100
+            End With
+        Next ws
+
+        ' 保存并关闭文件
+        wb.Close SaveChanges:=True
+
+        ' 下一个文件
+        fileName = Dir
+    Loop
+
+    ' 打开屏幕更新
+    Application.ScreenUpdating = True
+
+    MsgBox "处理完成！", vbInformation
+End Sub
