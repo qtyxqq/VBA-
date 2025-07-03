@@ -1,0 +1,59 @@
+Sub CheckRevisionAndVersion_AndWriteToSheet()
+    Dim folderPath As String
+    Dim fileName As String
+    Dim wb As Workbook
+    Dim propRev As Variant
+    Dim propVer As Variant
+    Dim logWs As Worksheet
+    Dim logRow As Long
+    Dim fullPath As String
+
+    ' === 1. 设置目标文件夹路径 ===
+    folderPath = "C:\Your\Path\" ' ← 修改为你的文件夹路径（末尾加 \）
+
+    If Right(folderPath, 1) <> "\" Then folderPath = folderPath & "\"
+
+    ' === 2. 设置日志工作表 ===
+    Set logWs = ThisWorkbook.Sheets(1)
+
+    ' === 3. 清除第6行以后的日志（保留1-5行）===
+    With logWs
+        If .Cells(Rows.Count, 1).End(xlUp).Row >= 6 Then
+            .Range("6:" & .Cells(Rows.Count, 1).End(xlUp).Row).ClearContents
+        End If
+    End With
+
+    ' === 4. 初始化第一条日志行号 ===
+    logRow = 6
+
+    ' === 5. 遍历文件夹中所有 .xlsx 文件 ===
+    fileName = Dir(folderPath & "*.xlsx")
+    Do While fileName <> ""
+
+        fullPath = folderPath & fileName
+
+        ' 打开文件
+        Set wb = Workbooks.Open(Filename:=fullPath, ReadOnly:=True)
+
+        On Error Resume Next
+        propRev = wb.BuiltinDocumentProperties("Revision Number")
+        propVer = wb.BuiltinDocumentProperties("Version")
+        On Error GoTo 0
+
+        ' 如果 Revision 或 Version 有值，写入日志表
+        If (Len(Trim(propRev & "")) > 0 And propRev <> 0) Or Len(Trim(propVer & "")) > 0 Then
+            logWs.Cells(logRow, 1).Value = fullPath
+            logWs.Cells(logRow, 2).Value = propRev
+            logWs.Cells(logRow, 3).Value = propVer
+            logRow = logRow + 1
+        End If
+
+        ' 关闭文件
+        wb.Close SaveChanges:=False
+
+        ' 下一个文件
+        fileName = Dir
+    Loop
+
+    MsgBox "检查完成，符合条件的文件已记录在第1个工作表中。", vbInformation
+End Sub
