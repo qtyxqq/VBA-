@@ -1,0 +1,40 @@
+Function HasAnyMissingMetadataFromWorkbook(wb As Workbook) As Boolean
+    Dim propAuthor As Variant, propLastAuthor As Variant
+    Dim propCompany As Variant, propManager As Variant
+    Dim propTitle As Variant ' 名前として使用
+    Dim propRev As Variant, propVer As Variant
+    Dim hasMissing As Boolean
+
+    On Error Resume Next
+
+    ' ドキュメントプロパティを取得
+    propAuthor = wb.BuiltinDocumentProperties("Author")            ' 作成者
+    propLastAuthor = wb.BuiltinDocumentProperties("Last Author")   ' 前回保存者
+    propCompany = wb.BuiltinDocumentProperties("Company")          ' 会社
+    propManager = wb.BuiltinDocumentProperties("Manager")          ' マネージャ
+    propTitle = wb.BuiltinDocumentProperties("Title")              ' 名前として代用
+    propRev = wb.BuiltinDocumentProperties("Revision Number")      ' 改訂番号
+    propVer = wb.BuiltinDocumentProperties("Version")              ' バージョン番号
+
+    On Error GoTo 0
+
+    ' 改訂番号またはバージョン番号が空の場合、ログ出力（Immediate ウィンドウ）
+    If Len(Trim(propRev & "")) = 0 Or Len(Trim(propVer & "")) = 0 Then
+        Debug.Print "【ログ対象】" & wb.FullName
+        Debug.Print "改訂番号: [" & propRev & "]"
+        Debug.Print "バージョン: [" & propVer & "]"
+    End If
+
+    ' 以下の項目のうち1つでも空であれば True を返す
+    If Len(Trim(propAuthor & "")) = 0 Then hasMissing = True
+    If Len(Trim(propLastAuthor & "")) = 0 Then hasMissing = True
+    If Len(Trim(propCompany & "")) = 0 Then hasMissing = True
+    If Len(Trim(propManager & "")) = 0 Then hasMissing = True
+    If Len(Trim(propTitle & "")) = 0 Then hasMissing = True
+
+    ' フォルダーのパスに「Users\」が含まれていれば個人フォルダと見なす
+    If InStr(1, wb.FullName, "Users\", vbTextCompare) > 0 Then hasMissing = True
+
+    ' 結果を返す（True：1つでも欠落あり、False：全て埋まっている）
+    HasAnyMissingMetadataFromWorkbook = hasMissing
+End Function
